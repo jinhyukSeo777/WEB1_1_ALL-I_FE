@@ -94,11 +94,21 @@ function AlarmIcon() {
       const eventSource = new EventSourcePolyfill(`/api/alarms/connect`, {
         headers: {
           Authorization: `${token}`,
+          Accept: "text/event-stream",
+          "Cache-Control": "no-cache",
+          Connection: "keep-alive",
         },
-        heartbeatTimeout: 10000000, // 10000초
+        heartbeatTimeout: 10000000,
+        withCredentials: true,
       });
       eventSource.onopen = () => {
         console.log("SSE 연결 성공");
+      };
+      eventSource.onerror = (error) => {
+        console.error("SSE 연결 에러:", error);
+        eventSource?.close();
+        // 연결이 끊기면 바로 재연결 시도
+        setTimeout(connect, 1000);
       };
       eventSource.onmessage = (event) => {
         console.log("Message from server:", event.data);
